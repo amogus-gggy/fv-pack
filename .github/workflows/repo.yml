@@ -1,0 +1,57 @@
+name: build-and-publish
+
+# Builds .deb packages and publishes them to the FVLinux APT repo
+# (https://repo-fvlinux.fvlabs.org). Required repository secret:
+#   VPS_SSH_KEY — private OpenSSH key for repo-deploy@91.245.224.42
+#   (matching public key in that user's ~/.ssh/authorized_keys on the VPS).
+# The publish step runs /usr/local/bin/fv-repo-update on the VPS, which
+# regenerates Packages + signed Release/InRelease.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install GTK4 dev libraries
+        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev
+
+      - name: Build .deb packages
+        run: ./packaging/build-debs.sh
+
+      - name: Upload .deb artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: debs
+          path: dist/*.deb
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download .deb artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: debs
+          path: dist
+
+      - name: Set up SSH key
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 22 -t ed25519 91.245.224.42 >> ~/.ssh/known_hosts
+
+      - name: Upload packages to repo pool
+        run: scp -i ~/.ssh/deploy_key -P 22 dist/*.deb repo-deploy@91.245.224.42:/var/www/apt-repo/pool/
+
+      - name: Regenerate APT metadata
+        run: ssh -i ~/.ssh/deploy_key -p 22 repo-deploy@91.245.224.42 /usr/local/bin/fv-repo-update
