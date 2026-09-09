@@ -25,7 +25,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev
 
       - name: Build .deb packages
-        run: ./packaging/build-debs.sh
+        # "+ci" suffix: monotonic snapshot versions (0.1.0+ciN), so every
+        # push upgrades and pool filenames stay immutable (CDN-safe).
+        run: ./packaging/build-debs.sh "+ci${{ github.run_number }}"
 
       - name: Upload .deb artifacts
         uses: actions/upload-artifact@v4
