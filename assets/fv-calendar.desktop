@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=FV Calendar
+Comment=Simple calendar with per-day notes
+Exec=fv-calendar
+Icon=office-calendar
+Terminal=false
+Type=Application
+Categories=Office;Calendar;
+StartupWMClass=fv-calendar

@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "fv-calendar",
+    "fv-notepad",
+    "fv-calculator",
+    "fv-passman",
+]
+resolver = "2"

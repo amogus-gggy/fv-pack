@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=FV Notepad
+Comment=Simple text editor
+Exec=fv-notepad
+Icon=accessories-text-editor
+Terminal=false
+Type=Application
+Categories=Utility;TextEditor;
+StartupWMClass=fv-notepad
